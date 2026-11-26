@@ -41,8 +41,8 @@ The TV's info page (`http://TV:8001/api/v2/`) used to report `PowerState: "on"`.
 
 ### Art Mode service freezes ("wedges")
 Sometimes the TV's art service stops answering. Connections open but never send their ready message, and every art command times out. Remote buttons still work. It also happens mid‑upload.
-**Workaround:** every art call has a timeout, and an upload that gets no answer in 90 s fails. After three failures in a row the sync stops and resumes at the next check. `status` shows *"Art Mode not responding"*, and after two checks in a row you get an alert.
-**The only fix is a restart:** hold the remote's **power button ~5 s** until the TV reboots, then press power briefly to return to Art Mode.
+**Workaround:** every art call has a time limit: 90 s per upload, 60 s for deleting old pictures. Only one check or sync runs at a time (a lock file), so a slow sync can't pile up behind the next 30‑minute check. After three failures in a row the sync stops and resumes at the next check. `status` shows *"Art Mode not responding"*, and after two checks in a row you get an alert.
+**Fix: restart, *then* enter Art Mode once.** Hold the remote's power button until the screen goes black and the Samsung logo appears (~5 s), or unplug the TV for a minute. **Restarting alone isn't enough:** after a cold boot the art service stays frozen until the TV enters Art Mode. Press power briefly once it's back on, or send `KEY_POWER` from the Mac; the remote-control channel keeps working while the art channel is frozen.
 
 ### Connecting fails if another app connects at the same moment
 The `samsungtvws` library gives up if any event arrives before "channel ready", for example the SmartThings app connecting. The kit patches `open()` to skip those events instead (`_patient_open` in `frame.py`).

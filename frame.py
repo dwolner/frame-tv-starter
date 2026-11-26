@@ -575,10 +575,10 @@ def cmd_sync(dry_run=False, limit: int | None = None):
 
     if to_remove:
         ids = [st["frames"][k]["content_id"] for k in to_remove]
-        try:
-            art.delete_list(ids)
-        except Exception as e:
-            log("sync: delete failed:", e)
+        res = with_timeout(lambda: art.delete_list(ids), 60, "TIMEOUT")
+        if res == "TIMEOUT":  # without a limit, a hung delete blocked this sync and every check after it
+            log("sync: deleting old pictures got no answer in 60s — stopping; next check retries")
+            return
         for k in to_remove:
             st["frames"].pop(k, None)
         save_state(st)
@@ -688,6 +688,19 @@ def sync_due(now: float) -> bool:
     return not last or datetime.fromisoformat(last).astimezone().date() < datetime.fromtimestamp(now).date()
 
 
+def single_instance():
+    """Only one check/sync at a time; a slow sync must not overlap the next 30-min check."""
+    import fcntl
+    CONF.mkdir(parents=True, exist_ok=True)
+    fh = open(CONF / "run.lock", "w")
+    try:
+        fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        print("another check/sync is still running — skipping")
+        sys.exit(0)
+    return fh  # keep open for the life of the process
+
+
 def cmd_check(dry_run=False):
     al = json.loads(ALERTS.read_text()) if ALERTS.exists() else {"open": {}}
     now = time.time()
@@ -740,12 +753,14 @@ def main(argv):
             with_timeout(lambda: a.set_brightness(n), 15)
         print(f"Art Mode brightness: {with_timeout(a.get_brightness, 15)}/10")
     elif c == "check":
+        _lock = single_instance()
         cmd_check(dry_run="--dry-run" in argv)
     elif c == "status":
         cmd_status()
     elif c == "shuffle":
         cmd_shuffle()
     elif c == "sync":
+        _lock = single_instance()
         lim = next((int(a.split("=")[1]) for a in argv if a.startswith("--limit=")), None)
         cmd_sync(dry_run="--dry-run" in argv, limit=lim)
     else:

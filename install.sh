@@ -75,4 +75,8 @@ launchctl bootstrap "gui/$(id -u)" "$PLIST"
 
 case ":$PATH:" in *":$BIN:"*) ;; *) echo "→ Add to your shell:  export PATH=\"\$HOME/.local/bin:\$PATH\"";; esac
 echo
-echo "Done. Next: turn the TV on, then run   frame pair <TV IP address>"
+if [ -f "$CONF/token" ]; then
+  echo "Done. Already paired — try:   frame status"
+else
+  echo "Done. Next: turn the TV on, then run   frame pair <TV IP address>"
+fi
