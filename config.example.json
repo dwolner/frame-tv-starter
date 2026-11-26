@@ -1,0 +1,14 @@
+{
+  "tv_host": "",
+  "source": {
+    "type": "icloud_shared_album",
+    "url": "https://www.icloud.com/sharedalbum/#B0aBcDeFgHiJkL"
+  },
+  "alert_imessage_to": "",
+  "total_pictures": 150,
+  "recent_pictures": 30,
+  "rotate_per_day": 25,
+  "slideshow_minutes": 15,
+  "hdmi_presses": 2,
+  "mat_color": [242, 239, 233]
+}

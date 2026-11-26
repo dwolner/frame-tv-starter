@@ -1,0 +1,12 @@
+#!/bin/sh
+# Forced command for the iPhone Shortcuts SSH key (see README "iPhone shortcuts").
+# The phone's key can run only these frame subcommands — nothing else on the Mac.
+FRAME="$(dirname "$0")/frame"
+set -- $SSH_ORIGINAL_COMMAND
+[ "$1" = "frame" ] && shift
+case "$1" in
+  art|off|hdmi|dvd|youtube|netflix|appletv|prime|tidy|status|shuffle) exec "$FRAME" "$1" ;;
+  brightness)
+    case "$2" in ''|[0-9]|10) exec "$FRAME" brightness $2 ;; esac ;;
+esac
+echo "not allowed: $SSH_ORIGINAL_COMMAND" >&2; exit 1
